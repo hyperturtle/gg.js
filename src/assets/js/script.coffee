@@ -9,3 +9,14 @@ setInterval (() ->
     console.log 'right'
 ),30
 
+setInterval (() ->
+  if _.size(gg.keys) > 0
+    console.log JSON.stringify gg.keys
+),1000
+
+gg.on.scroll = (evt) ->
+  gg.on.mousemove()
+
+gg.on.mousemove = (evt) ->
+
+gg.go()
