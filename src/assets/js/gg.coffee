@@ -1,3 +1,7 @@
+soundManager.url = 'assets/swf/'
+soundManager.flashVersion = 9
+soundManager.useFlashBlock = false
+
 gg =
   keys: {}
   mouse: {x:0;y:0}
@@ -8,6 +12,7 @@ gg =
     scroll: () ->
   go: () ->
     $(window).resize()
+  snd: soundManager
 
 
 $(window).on
@@ -33,4 +38,5 @@ $(window).on
       y: $(window).scrollTop()
     gg.on.scroll.apply(@,arguments)
   ),25
+
 

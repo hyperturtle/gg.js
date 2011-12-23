@@ -1,3 +1,8 @@
+soundManager.url = 'assets/swf/'
+soundManager.flashVersion = 9
+soundManager.useFlashBlock = false
+
+
 setInterval (() ->
   if gg.keys['38']
     console.log 'up'
