@@ -477,16 +477,17 @@ A(),true;var a;if(!c.useFlashBlock||!c.flashLoadTimeout||c.getMoviePercent())m=t
 try{c.o._externalInterfaceTest(false),ua(true,c.flashPollingInterval||(c.useHighPerformance?10:50)),c.debugMode||c.o._disableDebug(),c.enabled=true,c.html5Only||k.add(i,"unload",ba)}catch(b){return C({type:"JS_TO_FLASH_EXCEPTION",fatal:true}),T(true),I(),false}I();k.remove(i,"load",c.beginDelayedInit);return true};B=function(){if(ea)return false;ea=true;ga();if(!p&&c.hasHTML5)c.useHTML5Audio=true,c.preferFlash=false;Aa();c.html5.usingFlash=za();q=c.html5.usingFlash;Ca();if(!p&&q)c.flashLoadTimeout=
 1;h.removeEventListener&&h.removeEventListener("DOMContentLoaded",B,false);R();return true};ma=function(){h.readyState==="complete"&&(B(),h.detachEvent("onreadystatechange",ma));return true};Y();k.add(i,"focus",x);k.add(i,"load",x);k.add(i,"load",Q);M&&E&&k.add(i,"mousemove",x);h.addEventListener?h.addEventListener("DOMContentLoaded",B,false):h.attachEvent?h.attachEvent("onreadystatechange",ma):C({type:"NO_DOM2_EVENTS",fatal:true});h.readyState==="complete"&&setTimeout(B,100)}var Z=null;if(typeof SM2_DEFER===
 "undefined"||!SM2_DEFER)Z=new N;$.SoundManager=N;$.soundManager=Z})(window);
-(function() {
-  var gg;
+var ggGo;
 
-  soundManager.url = 'assets/swf/';
+soundManager.url = '/assets/swf/';
 
-  soundManager.flashVersion = 9;
+soundManager.flashVersion = 9;
 
-  soundManager.useFlashBlock = false;
+soundManager.useFlashBlock = false;
 
-  gg = {
+ggGo = function(func) {
+  var ggo;
+  ggo = {
     keys: {},
     mouse: {
       x: 0,
@@ -501,64 +502,72 @@ try{c.o._externalInterfaceTest(false),ua(true,c.flashPollingInterval||(c.useHigh
       resize: function() {},
       scroll: function() {}
     },
-    go: function() {
+    go: function(func) {
+      func(ggo);
       return $(window).resize();
     },
-    snd: soundManager
+    snd: soundManager,
+    loadsnds: function(loadthese) {
+      ggo.snd.onready(function() {
+        _.each(loadthese, function(url, soundId) {
+          ggo.snds[soundId] = ggo.snd.createSound({
+            id: soundId,
+            url: url
+          });
+          ggo.snds[soundId].load();
+        });
+      });
+    },
+    snds: {}
   };
-
   $(window).on({
     keydown: function(evt) {
-      return gg.keys[evt.which] = 'd';
+      return ggo.keys[evt.which] = 'd';
     },
     keyup: function(evt) {
-      return delete gg.keys[evt.which];
+      return delete ggo.keys[evt.which];
     },
     blur: function(evt) {
-      return gg.keys = {};
+      return ggo.keys = {};
     },
     mousemove: _.throttle((function(evt) {
-      gg.mouse.x = evt.pageX;
-      gg.mouse.y = evt.pageY;
-      return gg.on.mousemove.apply(this, arguments);
+      ggo.mouse.x = evt.pageX;
+      ggo.mouse.y = evt.pageY;
+      return ggo.on.mousemove.apply(this, arguments);
     }), 25),
     resize: _.throttle((function(evt) {
-      gg.width = $(window).width();
-      gg.height = $(window).height();
-      return gg.on.resize.apply(this, arguments);
+      ggo.width = $(window).width();
+      ggo.height = $(window).height();
+      return ggo.on.resize.apply(this, arguments);
     }), 25),
     scroll: _.throttle((function(evt) {
-      gg.scroll = {
+      ggo.scroll = {
         x: $(window).scrollLeft(),
         y: $(window).scrollTop()
       };
-      return gg.on.scroll.apply(this, arguments);
+      return ggo.on.scroll.apply(this, arguments);
     }), 25)
   });
+  return ggo.go(func);
+};
 
-  soundManager.url = 'assets/swf/';
-
-  soundManager.flashVersion = 9;
-
-  soundManager.useFlashBlock = false;
-
+ggGo(function(gg) {
+  gg.on.scroll = function(evt) {};
+  gg.on.mousemove = function(evt) {};
+  gg.loadsnds({
+    test: '../assets/sounds/test.mp3'
+  });
   setInterval((function() {
-    if (gg.keys['38']) console.log('up');
+    if (gg.keys['38']) {
+      console.log('up');
+      gg.snds.test.play();
+    }
     if (gg.keys['40']) console.log('down');
     if (gg.keys['37']) console.log('left');
     if (gg.keys['39']) return console.log('right');
   }), 30);
-
+  setInterval((function() {}), 30);
   setInterval((function() {
     if (_.size(gg.keys) > 0) return console.log(JSON.stringify(gg.keys));
   }), 1000);
-
-  gg.on.scroll = function(evt) {
-    return gg.on.mousemove();
-  };
-
-  gg.on.mousemove = function(evt) {};
-
-  gg.go();
-
-}).call(this);
+});
