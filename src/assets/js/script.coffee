@@ -3,10 +3,7 @@ ggGo (gg) ->
 
   gg.on.mousemove = (evt) ->
 
-  gg.loadsnds
-    test: '../assets/sounds/test.mp3'
-
-  setInterval (() ->
+  gg.on.loop = (diff) ->
     if gg.keys['38']
       console.log 'up'
       gg.snds.test.play()
@@ -16,10 +13,13 @@ ggGo (gg) ->
       console.log 'left'
     if gg.keys['39']
       console.log 'right'
-  ),30
 
-  setInterval ( ()->
-  ),30
+  gg.loadsnds
+    test: '../assets/sounds/test.mp3'
+
+  gg.blocks.push
+    x:100
+    y:100
 
   setInterval (() ->
     if _.size(gg.keys) > 0
