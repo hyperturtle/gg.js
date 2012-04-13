@@ -356,8 +356,192 @@ function(a){var b=N++;return a?a+b:b};b.templateSettings={evaluate:/<%([\s\S]+?)
 u,function(a,b){return"'+\n_.escape("+w(b)+")+\n'"}).replace(d.interpolate||u,function(a,b){return"'+\n("+w(b)+")+\n'"}).replace(d.evaluate||u,function(a,b){return"';\n"+w(b)+"\n;__p+='"})+"';\n";d.variable||(a="with(obj||{}){\n"+a+"}\n");var a="var __p='';var print=function(){__p+=Array.prototype.join.call(arguments, '')};\n"+a+"return __p;\n",e=new Function(d.variable||"obj","_",a);if(c)return e(c,b);c=function(a){return e.call(this,a,b)};c.source="function("+(d.variable||"obj")+"){\n"+a+"}";return c};
 b.chain=function(a){return b(a).chain()};var m=function(a){this._wrapped=a};b.prototype=m.prototype;var x=function(a,c){return c?b(a).chain():a},M=function(a,c){m.prototype[a]=function(){var a=i.call(arguments);J.call(a,this._wrapped);return x(c.apply(b,a),this._chain)}};b.mixin(b);j("pop,push,reverse,shift,sort,splice,unshift".split(","),function(a){var b=k[a];m.prototype[a]=function(){var d=this._wrapped;b.apply(d,arguments);var e=d.length;(a=="shift"||a=="splice")&&e===0&&delete d[0];return x(d,
 this._chain)}});j(["concat","join","slice"],function(a){var b=k[a];m.prototype[a]=function(){return x(b.apply(this._wrapped,arguments),this._chain)}});m.prototype.chain=function(){this._chain=true;return this};m.prototype.value=function(){return this._wrapped}}).call(this);
-var $container, gg,
+var $container, GG, gg,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   _this = this;
+
+(function() {
+  var id, lastTime, vendor, vendors, _i, _len;
+  vendors = ["ms", "moz", "webkit", "o"];
+  for (_i = 0, _len = vendors.length; _i < _len; _i++) {
+    vendor = vendors[_i];
+    window.requestAnimationFrame = window[vendor + "RequestAnimationFrame"];
+    window.cancelAnimationFrame = window[vendor + "CancelAnimationFrame"] || window[vendor + "CancelRequestAnimationFrame"];
+    if (window.requestAnimationFrame) return;
+  }
+  if (!window.requestAnimationFrame) {
+    lastTime = 0;
+    id = null;
+    window.requestAnimationFrame = function(callback, element) {
+      var currTime, timeToCall;
+      currTime = new Date().getTime();
+      timeToCall = Math.max(0, 16 - (currTime - lastTime));
+      id = window.setTimeout(function() {
+        return callback(currTime + timeToCall);
+      }, timeToCall);
+      lastTime = currTime + timeToCall;
+      return id;
+    };
+  }
+  if (!window.cancelAnimationFrame) {
+    window.cancelAnimationFrame = function(id) {
+      clearTimeout(id);
+    };
+  }
+})();
+
+GG = (function() {
+
+  function GG(options) {
+    var _this = this;
+    this.options = options;
+    this.loadsounds = __bind(this.loadsounds, this);
+    this.playsound = __bind(this.playsound, this);
+    this._frame = __bind(this._frame, this);
+    this.entities = {};
+    this.entities_uuid = 0;
+    this.tags = {};
+    this.keys = {};
+    this.snds = {};
+    $(window).on({
+      keydown: function(evt) {
+        _this.keys[evt.which] = 'd';
+      },
+      keyup: function(evt) {
+        delete _this.keys[evt.which];
+      },
+      blur: function(evt) {
+        _this.keys = {};
+      }
+    });
+    if (this.options) {
+      if (this.options.sounds) {
+        if (soundManager) {
+          soundManager.url = 'assets/swf/';
+          soundManager.flashVersion = 9;
+          soundManager.useFlashBlock = false;
+        }
+        this.loadsounds(this.options.sounds);
+      }
+    }
+  }
+
+  GG.prototype.add = function(item) {
+    var tag, uuid, _i, _len, _ref;
+    this.entities_uuid += 1;
+    uuid = this.entities_uuid.toString(36);
+    if (item.tags) {
+      _ref = item.tags;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tag = _ref[_i];
+        if (!this.tags[tag]) this.tags[tag] = {};
+        this.tags[tag][uuid] = 1;
+      }
+    }
+    item.uuid = uuid;
+    this.entities[uuid] = item;
+    return this.entities_uuid;
+  };
+
+  GG.prototype.get = function(uuid) {
+    return this.entities[uuid];
+  };
+
+  GG.prototype.each = function(tag, cb) {
+    var id, _results, _results2;
+    if (cb) {
+      _results = [];
+      for (id in this.tags[tag]) {
+        _results.push(cb(this.entities[id]));
+      }
+      return _results;
+    } else {
+      cb = tag;
+      _results2 = [];
+      for (id in this.entities) {
+        _results2.push(cb(this.entities[id]));
+      }
+      return _results2;
+    }
+  };
+
+  GG.prototype.count = function(tag) {
+    var id, s;
+    s = 0;
+    if (tag) {
+      for (id in this.tags[tag]) {
+        s += 1;
+      }
+    } else {
+      for (id in this.entities) {
+        s += 1;
+      }
+    }
+    return s;
+  };
+
+  GG.prototype.find = function(tag) {
+    var id, _results;
+    _results = [];
+    for (id in this.tags[tag]) {
+      _results.push(this.entities[id]);
+    }
+    return _results;
+  };
+
+  GG.prototype.remove = function(bullet) {
+    var tag, uuid, _i, _len, _ref;
+    uuid = bullet.uuid;
+    if (this.entities[uuid]) {
+      if (this.entities[uuid].tags) {
+        _ref = this.entities[uuid].tags;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          tag = _ref[_i];
+          delete this.tags[tag][uuid];
+        }
+      }
+      return delete this.entities[uuid];
+    }
+  };
+
+  GG.prototype.start = function() {
+    this.prevFrame = new Date().getTime();
+    return this._frame();
+  };
+
+  GG.prototype.frame = function(diff, total) {};
+
+  GG.prototype._frame = function(total) {
+    var diff;
+    diff = total - this.prevFrame;
+    this.frame(diff, total);
+    return requestAnimationFrame(this._frame);
+  };
+
+  GG.prototype.playsound = function(snd, opts) {
+    if (gg.snds[snd]) gg.snds[snd].play(opts);
+  };
+
+  GG.prototype.loadsounds = function(loadthese) {
+    var _this = this;
+    if (soundManager) {
+      soundManager.onready(function() {
+        var soundId, url;
+        for (soundId in loadthese) {
+          url = loadthese[soundId];
+          _this.snds[soundId] = soundManager.createSound({
+            id: soundId,
+            url: url
+          });
+        }
+      });
+      return;
+    }
+  };
+
+  return GG;
+
+})();
 
 gg = new GG();
 
