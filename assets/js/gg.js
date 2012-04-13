@@ -433,56 +433,187 @@ c.useFlashBlock&&oa():V(!0):0!==c.flashLoadTimeout&&V(!0))},c.flashLoadTimeout)}
 "load",c.beginDelayedInit),c.enabled=!0,K();return!0}T();try{h._externalInterfaceTest(!1),Aa(!0,c.flashPollingInterval||(c.useHighPerformance?10:50)),c.debugMode||h._disableDebug(),c.enabled=!0,c.html5Only||m.add(g,"unload",fa)}catch(a){return D({type:"JS_TO_FLASH_EXCEPTION",fatal:!0}),V(!0),K(),!1}K();m.remove(g,"load",c.beginDelayedInit);return!0};C=function(){if(ka)return!1;ka=!0;ma();if(!r&&c.hasHTML5)c.useHTML5Audio=!0,c.preferFlash=!1;Ha();c.html5.usingFlash=Ga();t=c.html5.usingFlash;Ja();if(!r&&
 t)c.flashLoadTimeout=1;k.removeEventListener&&k.removeEventListener("DOMContentLoaded",C,!1);T();return!0};sa=function(){"complete"===k.readyState&&(C(),k.detachEvent("onreadystatechange",sa));return!0};ja=function(){ga=!0;m.remove(g,"load",ja)};ba();m.add(g,"focus",y);m.add(g,"load",y);m.add(g,"load",S);m.add(g,"load",ja);O&&G&&m.add(g,"mousemove",y);k.addEventListener?k.addEventListener("DOMContentLoaded",C,!1):k.attachEvent?k.attachEvent("onreadystatechange",sa):D({type:"NO_DOM2_EVENTS",fatal:!0});
 "complete"===k.readyState&&setTimeout(C,100)}var ca=null;if("undefined"===typeof SM2_DEFER||!SM2_DEFER)ca=new P;H.SoundManager=P;H.soundManager=ca})(window);
-var $container, gg,
-  _this = this;
+var GG,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-gg = new GG();
-
-gg.loadsounds({
-  test: 'assets/sounds/test.mp3'
-});
-
-$container = $("#container")[0];
-
-gg.frame = function(diff, total) {
-  var x;
-  for (x = 0; x <= 1; x++) {
-    gg.add({
-      vx: 0,
-      vy: 0,
-      x: 400,
-      y: 300,
-      w: 10,
-      h: 10,
-      color: ['#f60', '#06f', '#6f0', '#0f6', '#06f', '#06f'][Math.floor(Math.random() * 6)],
-      tags: ['bullet']
-    });
+(function() {
+  var id, lastTime, vendor, vendors, _i, _len;
+  vendors = ["ms", "moz", "webkit", "o"];
+  for (_i = 0, _len = vendors.length; _i < _len; _i++) {
+    vendor = vendors[_i];
+    window.requestAnimationFrame = window[vendor + "RequestAnimationFrame"];
+    window.cancelAnimationFrame = window[vendor + "CancelAnimationFrame"] || window[vendor + "CancelRequestAnimationFrame"];
+    if (window.requestAnimationFrame) return;
   }
-  gg.each('bullet', function(bullet) {
-    bullet.vx *= 0.999;
-    bullet.vy *= 0.999;
-    bullet.vy += (Math.random() - 0.5) * 1;
-    bullet.vx += (Math.random() - 0.5) * 1;
-    if (0 > bullet.y || bullet.y > 600 || 0 > bullet.x || bullet.x > 800) {
-      bullet.ele.parentNode.removeChild(bullet.ele);
-      gg.remove(bullet);
-      return gg.playsound('test', {
-        volume: 10,
-        pan: bullet.x * 100 / 800
-      });
-    }
-  });
-  gg.each(function(item) {
-    item.x += item.vx;
-    item.y += item.vy;
-    if (!item.ele) {
-      item.ele = document.createElement('div');
-      item.ele.className = "block";
-      $container.appendChild(item.ele);
-    }
-    return item.ele.style.cssText = ['top:', item.y, 'px;', 'left:', item.x, 'px;', 'height:', item.h, 'px;', 'width:', item.w, 'px;', 'background-color:', item.color, ';'].join('');
-  });
-  if (Math.random() < 0.01) return $("#count").html(gg.count('bullet'));
-};
+  if (!window.requestAnimationFrame) {
+    lastTime = 0;
+    id = null;
+    window.requestAnimationFrame = function(callback, element) {
+      var currTime, timeToCall;
+      currTime = new Date().getTime();
+      timeToCall = Math.max(0, 16 - (currTime - lastTime));
+      id = window.setTimeout(function() {
+        return callback(currTime + timeToCall);
+      }, timeToCall);
+      lastTime = currTime + timeToCall;
+      return id;
+    };
+  }
+  if (!window.cancelAnimationFrame) {
+    window.cancelAnimationFrame = function(id) {
+      clearTimeout(id);
+    };
+  }
+})();
 
-gg.start();
+if (soundManager) {
+  soundManager.url = 'assets/swf/';
+  soundManager.flashVersion = 9;
+  soundManager.useFlashBlock = false;
+}
+
+GG = (function() {
+
+  function GG(options) {
+    var _this = this;
+    this.options = options;
+    this.loadsounds = __bind(this.loadsounds, this);
+    this.playsound = __bind(this.playsound, this);
+    this._frame = __bind(this._frame, this);
+    this.entities = {};
+    this.entities_uuid = 0;
+    this.tags = {};
+    this.keys = {};
+    this.snds = {};
+    $(window).on({
+      keydown: function(evt) {
+        _this.keys[evt.which] = 'd';
+      },
+      keyup: function(evt) {
+        delete _this.keys[evt.which];
+      },
+      blur: function(evt) {
+        _this.keys = {};
+      }
+    });
+    if (this.options) {
+      if (this.options.sounds) this.loadsounds(this.options.sounds);
+    }
+  }
+
+  GG.prototype.add = function(item) {
+    var tag, uuid, _i, _len, _ref;
+    this.entities_uuid += 1;
+    uuid = this.entities_uuid.toString(36);
+    if (item.tags) {
+      _ref = item.tags;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tag = _ref[_i];
+        if (!this.tags[tag]) this.tags[tag] = {};
+        this.tags[tag][uuid] = 1;
+      }
+    }
+    item.uuid = uuid;
+    this.entities[uuid] = item;
+    return this.entities_uuid;
+  };
+
+  GG.prototype.get = function(uuid) {
+    return this.entities[uuid];
+  };
+
+  GG.prototype.each = function(tag, cb) {
+    var id, _results, _results2;
+    if (cb) {
+      _results = [];
+      for (id in this.tags[tag]) {
+        _results.push(cb(this.entities[id]));
+      }
+      return _results;
+    } else {
+      cb = tag;
+      _results2 = [];
+      for (id in this.entities) {
+        _results2.push(cb(this.entities[id]));
+      }
+      return _results2;
+    }
+  };
+
+  GG.prototype.count = function(tag) {
+    var id, s;
+    s = 0;
+    if (tag) {
+      for (id in this.tags[tag]) {
+        s += 1;
+      }
+    } else {
+      for (id in this.entities) {
+        s += 1;
+      }
+    }
+    return s;
+  };
+
+  GG.prototype.find = function(tag) {
+    var id, _results;
+    _results = [];
+    for (id in this.tags[tag]) {
+      _results.push(this.entities[id]);
+    }
+    return _results;
+  };
+
+  GG.prototype.remove = function(bullet) {
+    var tag, uuid, _i, _len, _ref;
+    uuid = bullet.uuid;
+    if (this.entities[uuid]) {
+      if (this.entities[uuid].tags) {
+        _ref = this.entities[uuid].tags;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          tag = _ref[_i];
+          delete this.tags[tag][uuid];
+        }
+      }
+      return delete this.entities[uuid];
+    }
+  };
+
+  GG.prototype.start = function() {
+    this.prevFrame = new Date().getTime();
+    return this._frame();
+  };
+
+  GG.prototype.frame = function(diff, total) {};
+
+  GG.prototype._frame = function(total) {
+    var diff;
+    diff = total - this.prevFrame;
+    this.frame(diff, total);
+    return requestAnimationFrame(this._frame);
+  };
+
+  GG.prototype.playsound = function(snd, opts) {
+    if (gg.snds[snd]) gg.snds[snd].play(opts);
+  };
+
+  GG.prototype.loadsounds = function(loadthese) {
+    var _this = this;
+    if (soundManager) {
+      soundManager.onready(function() {
+        var soundId, url;
+        for (soundId in loadthese) {
+          url = loadthese[soundId];
+          _this.snds[soundId] = soundManager.createSound({
+            id: soundId,
+            url: url
+          });
+        }
+      });
+      return;
+    }
+  };
+
+  return GG;
+
+})();
