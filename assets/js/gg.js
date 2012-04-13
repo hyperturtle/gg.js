@@ -413,10 +413,10 @@ GG = (function() {
         _this.keys = {};
       }
     });
-    if (soundManager) {
-      soundManager.url = 'assets/swf/';
-      soundManager.flashVersion = 9;
-      soundManager.useFlashBlock = false;
+    if (window.soundManager) {
+      window.soundManager.url = 'assets/swf/';
+      window.soundManager.flashVersion = 9;
+      window.soundManager.useFlashBlock = false;
     }
     if (this.options) {
       if (this.options.sounds) this.loadsounds(this.options.sounds);
@@ -521,12 +521,12 @@ GG = (function() {
 
   GG.prototype.loadsounds = function(loadthese) {
     var _this = this;
-    if (soundManager) {
-      soundManager.onready(function() {
+    if (window.soundManager) {
+      window.soundManager.onready(function() {
         var soundId, url;
         for (soundId in loadthese) {
           url = loadthese[soundId];
-          _this.snds[soundId] = soundManager.createSound({
+          _this.snds[soundId] = window.soundManager.createSound({
             id: soundId,
             url: url
           });

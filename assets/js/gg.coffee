@@ -44,10 +44,10 @@ class GG
         @keys = {}
         return
 
-    if soundManager
-      soundManager.url = 'assets/swf/'
-      soundManager.flashVersion = 9
-      soundManager.useFlashBlock = false
+    if window.soundManager
+      window.soundManager.url = 'assets/swf/'
+      window.soundManager.flashVersion = 9
+      window.soundManager.useFlashBlock = false
 
     if @options
       if @options.sounds
@@ -107,10 +107,10 @@ class GG
       gg.snds[snd].play(opts)
     return
   loadsounds: (loadthese) =>
-    if soundManager
-      soundManager.onready () =>
+    if window.soundManager
+      window.soundManager.onready () =>
         for soundId, url of loadthese
-          @snds[soundId] = soundManager.createSound
+          @snds[soundId] = window.soundManager.createSound
             id: soundId
             url: url
         return
