@@ -6,7 +6,6 @@ call del script.js
 call del gg.js
 call more libs\json2.js >> script.js
 call more libs\underscore-min.js >> script.js
-call more libs\soundmanager2-nodebug-jsmin.js >> script.js
 call cp script.js gg.js
 call coffee -bpj gg.coffee script.coffee >> script.js
 call coffee -bp gg.coffee >> gg.js
