@@ -783,7 +783,7 @@ GG = (function() {
 gg = new GG();
 
 gg.loadsounds({
-  test: '../assets/sounds/test.mp3'
+  test: 'assets/sounds/test.mp3'
 });
 
 $container = $("#container")[0];
