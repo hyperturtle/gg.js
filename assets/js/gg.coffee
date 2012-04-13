@@ -25,7 +25,7 @@
 )()
 
 if soundManager
-  soundManager.url = '/assets/swf/'
+  soundManager.url = 'assets/swf/'
   soundManager.flashVersion = 9
   soundManager.useFlashBlock = false
 

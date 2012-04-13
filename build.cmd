@@ -1,4 +1,4 @@
-call cd src\assets
+call cd assets
 call cd css
 call lessc -x style.less style.css
 call cd ..\js
