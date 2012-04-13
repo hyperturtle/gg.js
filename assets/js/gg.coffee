@@ -24,10 +24,6 @@
   return
 )()
 
-if soundManager
-  soundManager.url = 'assets/swf/'
-  soundManager.flashVersion = 9
-  soundManager.useFlashBlock = false
 
 class GG
   constructor: (@options) ->
@@ -50,6 +46,11 @@ class GG
 
     if @options
       if @options.sounds
+        if soundManager
+          soundManager.url = 'assets/swf/'
+          soundManager.flashVersion = 9
+          soundManager.useFlashBlock = false
+
         @loadsounds @options.sounds
   add: (item) ->
     @entities_uuid += 1
