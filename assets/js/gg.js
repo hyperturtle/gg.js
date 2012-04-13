@@ -413,15 +413,13 @@ GG = (function() {
         _this.keys = {};
       }
     });
+    if (soundManager) {
+      soundManager.url = 'assets/swf/';
+      soundManager.flashVersion = 9;
+      soundManager.useFlashBlock = false;
+    }
     if (this.options) {
-      if (this.options.sounds) {
-        if (soundManager) {
-          soundManager.url = 'assets/swf/';
-          soundManager.flashVersion = 9;
-          soundManager.useFlashBlock = false;
-        }
-        this.loadsounds(this.options.sounds);
-      }
+      if (this.options.sounds) this.loadsounds(this.options.sounds);
     }
   }
 
