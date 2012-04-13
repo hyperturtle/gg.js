@@ -628,18 +628,19 @@ var $container, GG, gg,
   }
 })();
 
-soundManager.url = '/assets/swf/';
-
-soundManager.flashVersion = 9;
-
-soundManager.useFlashBlock = false;
+if (soundManager) {
+  soundManager.url = '/assets/swf/';
+  soundManager.flashVersion = 9;
+  soundManager.useFlashBlock = false;
+}
 
 GG = (function() {
 
   function GG(options) {
     var _this = this;
     this.options = options;
-    this.loadsnds = __bind(this.loadsnds, this);
+    this.loadsounds = __bind(this.loadsounds, this);
+    this.playsound = __bind(this.playsound, this);
     this._frame = __bind(this._frame, this);
     this.entities = {};
     this.entities_uuid = 0;
@@ -657,6 +658,9 @@ GG = (function() {
         _this.keys = {};
       }
     });
+    if (this.options) {
+      if (this.options.sounds) this.loadsounds(this.options.sounds);
+    }
   }
 
   GG.prototype.add = function(item) {
@@ -751,18 +755,25 @@ GG = (function() {
     return requestAnimationFrame(this._frame);
   };
 
-  GG.prototype.loadsnds = function(loadthese) {
+  GG.prototype.playsound = function(snd, opts) {
+    if (gg.snds[snd]) gg.snds[snd].play(opts);
+  };
+
+  GG.prototype.loadsounds = function(loadthese) {
     var _this = this;
-    soundManager.onready(function() {
-      var soundId, url;
-      for (soundId in loadthese) {
-        url = loadthese[soundId];
-        _this.snds[soundId] = soundManager.createSound({
-          id: soundId,
-          url: url
-        });
-      }
-    });
+    if (soundManager) {
+      soundManager.onready(function() {
+        var soundId, url;
+        for (soundId in loadthese) {
+          url = loadthese[soundId];
+          _this.snds[soundId] = soundManager.createSound({
+            id: soundId,
+            url: url
+          });
+        }
+      });
+      return;
+    }
   };
 
   return GG;
@@ -771,39 +782,41 @@ GG = (function() {
 
 gg = new GG();
 
-gg.loadsnds({
+gg.loadsounds({
   test: '../assets/sounds/test.mp3'
 });
 
 $container = $("#container")[0];
 
 gg.frame = function(diff, total) {
-  if (Math.random() > 0.1) {
+  var x;
+  for (x = 0; x <= 1; x++) {
     gg.add({
       vx: 0,
       vy: 0,
       x: 400,
       y: 300,
+      w: 10,
+      h: 10,
+      color: ['#f60', '#06f', '#6f0', '#0f6', '#06f', '#06f'][Math.floor(Math.random() * 6)],
       tags: ['bullet']
     });
   }
   gg.each('bullet', function(bullet) {
-    bullet.vx *= 0.99;
-    bullet.vy *= 0.99;
+    bullet.vx *= 0.999;
+    bullet.vy *= 0.999;
     bullet.vy += (Math.random() - 0.5) * 1;
     bullet.vx += (Math.random() - 0.5) * 1;
     if (0 > bullet.y || bullet.y > 600 || 0 > bullet.x || bullet.x > 800) {
       bullet.ele.parentNode.removeChild(bullet.ele);
       gg.remove(bullet);
-      if (gg.snds.test) {
-        return gg.snds.test.play({
-          volume: 10,
-          pan: bullet.x * 100 / 800
-        });
-      }
+      return gg.playsound('test', {
+        volume: 10,
+        pan: bullet.x * 100 / 800
+      });
     }
   });
-  return gg.each(function(item) {
+  gg.each(function(item) {
     item.x += item.vx;
     item.y += item.vy;
     if (!item.ele) {
@@ -811,8 +824,9 @@ gg.frame = function(diff, total) {
       item.ele.className = "block";
       $container.appendChild(item.ele);
     }
-    return item.ele.style.cssText = ['top:', item.y, 'px;', 'left:', item.x, 'px;'].join('');
+    return item.ele.style.cssText = ['top:', item.y, 'px;', 'left:', item.x, 'px;', 'height:', item.h, 'px;', 'width:', item.w, 'px;', 'background-color:', item.color, ';'].join('');
   });
+  if (Math.random() < 0.01) return $("#count").html(gg.count('bullet'));
 };
 
 gg.start();

@@ -24,9 +24,10 @@
   return
 )()
 
-soundManager.url = '/assets/swf/'
-soundManager.flashVersion = 9
-soundManager.useFlashBlock = false
+if soundManager
+  soundManager.url = '/assets/swf/'
+  soundManager.flashVersion = 9
+  soundManager.useFlashBlock = false
 
 class GG
   constructor: (@options) ->
@@ -46,6 +47,10 @@ class GG
       blur: (evt) =>
         @keys = {}
         return
+
+    if @options
+      if @options.sounds
+        @loadsounds @options.sounds
   add: (item) ->
     @entities_uuid += 1
     uuid = @entities_uuid.toString(36)
@@ -96,13 +101,18 @@ class GG
     diff = total - @prevFrame
     @frame(diff, total)
     requestAnimationFrame @_frame
-  loadsnds: (loadthese) =>
-    soundManager.onready () =>
-      for soundId, url of loadthese
-        @snds[soundId] = soundManager.createSound
-          id: soundId
-          url: url
+  playsound: (snd, opts) =>
+    if gg.snds[snd]
+      gg.snds[snd].play(opts)
+    return
+  loadsounds: (loadthese) =>
+    if soundManager
+      soundManager.onready () =>
+        for soundId, url of loadthese
+          @snds[soundId] = soundManager.createSound
+            id: soundId
+            url: url
+        return
       return
     return
 
-gg = new GG()
