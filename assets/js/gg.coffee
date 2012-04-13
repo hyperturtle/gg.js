@@ -44,13 +44,13 @@ class GG
         @keys = {}
         return
 
+    if soundManager
+      soundManager.url = 'assets/swf/'
+      soundManager.flashVersion = 9
+      soundManager.useFlashBlock = false
+
     if @options
       if @options.sounds
-        if soundManager
-          soundManager.url = 'assets/swf/'
-          soundManager.flashVersion = 9
-          soundManager.useFlashBlock = false
-
         @loadsounds @options.sounds
   add: (item) ->
     @entities_uuid += 1
