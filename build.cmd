@@ -3,7 +3,6 @@ call cd css
 call lessc -x style.less style.css
 call cd ..\js
 call del script.js
-call more libs\animFrame.js >> script.js
 call more libs\json2.js >> script.js
 REM call more libs\console.log.js >> script.js
 REM call more libs\localstorage.js >> script.js

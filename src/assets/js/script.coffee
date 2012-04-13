@@ -1,29 +1,41 @@
-ggGo (gg) ->
-  gg.on.scroll = (evt) ->
+gg.loadsnds
+  test: '../assets/sounds/test.mp3'
 
-  gg.on.mousemove = (evt) ->
+$container = $("#container")[0]
 
-  gg.on.loop = (diff) ->
-    if gg.keys['38']
-      console.log 'up'
-      gg.snds.test.play()
-    if gg.keys['40']
-      console.log 'down'
-    if gg.keys['37']
-      console.log 'left'
-    if gg.keys['39']
-      console.log 'right'
+gg.frame = (diff, total) =>
+  if Math.random() > 0.1
+    gg.add
+      vx: 0
+      vy: 0
+      x: 400
+      y: 300
+      tags: ['bullet']
+  gg.each 'bullet', (bullet)->
+    bullet.vx *= 0.99
+    bullet.vy *= 0.99
+    bullet.vy += (Math.random() - 0.5) * 1
+    bullet.vx += (Math.random() - 0.5) * 1
+    if 0 > bullet.y or bullet.y > 600 or 0 > bullet.x or bullet.x > 800
+      bullet.ele.parentNode.removeChild(bullet.ele)
+      gg.remove(bullet)
+      if gg.snds.test
+        gg.snds.test.play({volume:10, pan: bullet.x * 100 / 800})
 
-  gg.loadsnds
-    test: '../assets/sounds/test.mp3'
+  gg.each (item) ->
+    item.x += item.vx
+    item.y += item.vy
 
-  gg.blocks.push
-    x:100
-    y:100
+    if not item.ele
+      item.ele = document.createElement('div')
+      item.ele.className = "block"
+      $container.appendChild item.ele
 
-  setInterval (() ->
-    if _.size(gg.keys) > 0
-      console.log JSON.stringify gg.keys
-  ),1000
+    item.ele.style.cssText = [
+      'top:', item.y, 'px;',
+      'left:', item.x, 'px;',
+    ].join('')
 
-  return
+  #$("#count").html gg.count 'bullet'
+
+gg.start()
