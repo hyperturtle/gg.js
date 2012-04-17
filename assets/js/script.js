@@ -356,7 +356,7 @@ function(a){var b=N++;return a?a+b:b};b.templateSettings={evaluate:/<%([\s\S]+?)
 u,function(a,b){return"'+\n_.escape("+w(b)+")+\n'"}).replace(d.interpolate||u,function(a,b){return"'+\n("+w(b)+")+\n'"}).replace(d.evaluate||u,function(a,b){return"';\n"+w(b)+"\n;__p+='"})+"';\n";d.variable||(a="with(obj||{}){\n"+a+"}\n");var a="var __p='';var print=function(){__p+=Array.prototype.join.call(arguments, '')};\n"+a+"return __p;\n",e=new Function(d.variable||"obj","_",a);if(c)return e(c,b);c=function(a){return e.call(this,a,b)};c.source="function("+(d.variable||"obj")+"){\n"+a+"}";return c};
 b.chain=function(a){return b(a).chain()};var m=function(a){this._wrapped=a};b.prototype=m.prototype;var x=function(a,c){return c?b(a).chain():a},M=function(a,c){m.prototype[a]=function(){var a=i.call(arguments);J.call(a,this._wrapped);return x(c.apply(b,a),this._chain)}};b.mixin(b);j("pop,push,reverse,shift,sort,splice,unshift".split(","),function(a){var b=k[a];m.prototype[a]=function(){var d=this._wrapped;b.apply(d,arguments);var e=d.length;(a=="shift"||a=="splice")&&e===0&&delete d[0];return x(d,
 this._chain)}});j(["concat","join","slice"],function(a){var b=k[a];m.prototype[a]=function(){return x(b.apply(this._wrapped,arguments),this._chain)}});m.prototype.chain=function(){this._chain=true;return this};m.prototype.value=function(){return this._wrapped}}).call(this);
-var $container, GG, Node, gg, root,
+var $container, GG, Node, gg, root, spawn,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = Object.prototype.hasOwnProperty,
   _this = this;
@@ -675,7 +675,7 @@ GG = (function() {
 })();
 
 gg = new GG({
-  spatial: ['bullet', 'bullet2']
+  spatial: ['bullet']
 });
 
 root = new Node();
@@ -686,67 +686,64 @@ gg.loadsounds({
 
 $container = $("#container")[0];
 
+spawn = function(x, y, s) {
+  if (x == null) x = Math.random() * 800;
+  if (y == null) y = Math.random() * 600;
+  if (s == null) s = 5;
+  return gg.add({
+    vx: 0,
+    vy: 0,
+    x: x,
+    y: y,
+    w: s,
+    h: s,
+    color: '#000',
+    tags: ['bullet']
+  });
+};
+
 gg.frame = function(diff, total) {
-  while (gg.count('bullet') < 20) {
-    gg.add({
-      vx: 0,
-      vy: 0,
-      x: Math.random() * 800,
-      y: Math.random() * 600,
-      w: 20,
-      h: 20,
-      color: '#000',
-      tags: ['bullet']
-    });
+  while (gg.count('bullet') < 30) {
+    spawn();
   }
-  while (gg.count('bullet2') < 5) {
-    gg.add({
-      vx: 0,
-      vy: 0,
-      x: Math.random() * 800,
-      y: Math.random() * 600,
-      w: 5,
-      h: 5,
-      color: '#333',
-      tags: ['bullet2']
-    });
-  }
-  gg.each(['bullet2', 'bullet'], function(bullet) {
+  gg.each(['bullet'], function(bullet) {
     bullet.vx *= 0.999;
     bullet.vy *= 0.999;
     bullet.vy += (Math.random() - 0.5) * 1;
     bullet.vx += (Math.random() - 0.5) * 1;
+    bullet.w = Math.min(20, bullet.w * 1.01);
+    bullet.h = Math.min(20, bullet.h * 1.01);
     bullet.color = gg.has_tag(bullet, 'bullet') ? '#000' : '#00f';
     bullet.x += bullet.vx;
     bullet.y += bullet.vy;
     if (0 > bullet.y || bullet.y > 600 || 0 > bullet.x || bullet.x > 800) {
-      if (bullet.ele) bullet.ele.parentNode.removeChild(bullet.ele);
-      return gg.remove(bullet);
+      return bullet.kill = 1;
     }
   });
   gg.update_spatials();
-  gg.find_spatial('bullet', {
-    x: 0,
-    y: 0,
-    w: 400,
-    h: 300
-  }, function(bullet) {
-    return bullet.color = '#f00';
-  });
-  gg.collisions('bullet', 'bullet2', function(bullet, bullet2) {
-    bullet.color = '#0f0';
-    bullet2.color = '#0f0';
-    return gg.playsound('test');
-  });
-  gg.each(function(item) {
-    if (!item.ele) {
-      item.ele = document.createElement('div');
-      item.ele.className = "block";
-      $container.appendChild(item.ele);
+  gg.collisions('bullet', 'bullet', function(bullet1, bullet2) {
+    if (bullet1.w + bullet2.w >= 20 && gg.count('bullet') < 100) {
+      spawn(bullet1.x + 20 * (Math.random() - 0.5), bullet1.y + 20 * (Math.random() - 0.5));
+      spawn(bullet1.x + 20 * (Math.random() - 0.5), bullet1.y + 20 * (Math.random() - 0.5));
     }
-    return item.ele.style.cssText = ['top:', item.y, 'px;', 'left:', item.x, 'px;', 'height:', item.h, 'px;', 'width:', item.w, 'px;', 'background-color:', item.color, ';'].join('');
+    bullet1.color = '#0f0';
+    bullet2.color = '#0f0';
+    bullet1.kill = 1;
+    return bullet2.kill = 1;
   });
-  return $("#count").html([gg.count(), gg.count('bullet'), gg.count('bullet2')].join('-'));
+  return gg.each(function(item) {
+    if (item.kill) {
+      if (item.ele) item.ele.parentNode.removeChild(item.ele);
+      return gg.remove(item);
+    } else {
+      if (!item.ele) {
+        item.ele = document.createElement('div');
+        item.ele.className = "block";
+        $container.appendChild(item.ele);
+      }
+      return item.ele.style.cssText = ['top:', item.y, 'px;', 'left:', item.x, 'px;', 'height:', item.h, 'px;', 'width:', item.w, 'px;', 'background-color:', item.color, ';'].join('');
+    }
+  });
 };
 
 gg.start();
