@@ -11,7 +11,7 @@ gg.loadsounds
 $container = $("#container")[0]
 
 gg.frame = (diff, total) =>
-  while gg.count('bullet') < 100
+  while gg.count('bullet') < 20
     gg.add
       vx: 0
       vy: 0
