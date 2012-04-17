@@ -52,6 +52,7 @@ gg.frame = (diff, total) =>
   gg.collisions 'bullet', 'bullet2', (bullet, bullet2)->
     bullet.color = '#0f0'
     bullet2.color = '#0f0'
+    gg.playsound('test')
 
   gg.each (item) ->
     if not item.ele

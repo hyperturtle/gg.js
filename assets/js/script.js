@@ -735,7 +735,8 @@ gg.frame = function(diff, total) {
   });
   gg.collisions('bullet', 'bullet2', function(bullet, bullet2) {
     bullet.color = '#0f0';
-    return bullet2.color = '#0f0';
+    bullet2.color = '#0f0';
+    return gg.playsound('test');
   });
   gg.each(function(item) {
     if (!item.ele) {
