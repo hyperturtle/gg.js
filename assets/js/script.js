@@ -356,8 +356,9 @@ function(a){var b=N++;return a?a+b:b};b.templateSettings={evaluate:/<%([\s\S]+?)
 u,function(a,b){return"'+\n_.escape("+w(b)+")+\n'"}).replace(d.interpolate||u,function(a,b){return"'+\n("+w(b)+")+\n'"}).replace(d.evaluate||u,function(a,b){return"';\n"+w(b)+"\n;__p+='"})+"';\n";d.variable||(a="with(obj||{}){\n"+a+"}\n");var a="var __p='';var print=function(){__p+=Array.prototype.join.call(arguments, '')};\n"+a+"return __p;\n",e=new Function(d.variable||"obj","_",a);if(c)return e(c,b);c=function(a){return e.call(this,a,b)};c.source="function("+(d.variable||"obj")+"){\n"+a+"}";return c};
 b.chain=function(a){return b(a).chain()};var m=function(a){this._wrapped=a};b.prototype=m.prototype;var x=function(a,c){return c?b(a).chain():a},M=function(a,c){m.prototype[a]=function(){var a=i.call(arguments);J.call(a,this._wrapped);return x(c.apply(b,a),this._chain)}};b.mixin(b);j("pop,push,reverse,shift,sort,splice,unshift".split(","),function(a){var b=k[a];m.prototype[a]=function(){var d=this._wrapped;b.apply(d,arguments);var e=d.length;(a=="shift"||a=="splice")&&e===0&&delete d[0];return x(d,
 this._chain)}});j(["concat","join","slice"],function(a){var b=k[a];m.prototype[a]=function(){return x(b.apply(this._wrapped,arguments),this._chain)}});m.prototype.chain=function(){this._chain=true;return this};m.prototype.value=function(){return this._wrapped}}).call(this);
-var $container, GG, gg,
+var $container, GG, Node, gg, root,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __hasProp = Object.prototype.hasOwnProperty,
   _this = this;
 
 (function() {
@@ -390,10 +391,75 @@ var $container, GG, gg,
   }
 })();
 
+Node = (function() {
+
+  function Node(w, h, partition) {
+    this.w = w != null ? w : 800;
+    this.h = h != null ? h : 600;
+    this.partition = partition != null ? partition : 100;
+    this.children = {};
+    this.ph = Math.ceil(this.h / this.partition);
+    this.pw = Math.ceil(this.w / this.partition);
+    this.clear();
+  }
+
+  Node.prototype.where = function(x, y) {
+    x = Math.min(this.pw - 1, Math.max(0, Math.floor(x / this.partition)));
+    y = Math.min(this.ph - 1, Math.max(0, Math.floor(y / this.partition)));
+    return [x, y];
+  };
+
+  Node.prototype.find = function(range) {
+    var c1, c2, out, p, x, y, _ref, _ref2, _ref3, _ref4;
+    c1 = this.where(range.x, range.y);
+    c2 = this.where(range.x + range.w, range.y + range.h);
+    out = [];
+    for (x = _ref = c1[0], _ref2 = c2[0]; _ref <= _ref2 ? x <= _ref2 : x >= _ref2; _ref <= _ref2 ? x++ : x--) {
+      for (y = _ref3 = c1[1], _ref4 = c2[1]; _ref3 <= _ref4 ? y <= _ref4 : y >= _ref4; _ref3 <= _ref4 ? y++ : y--) {
+        p = this.children[x + ',' + y];
+        out = out.concat(p);
+      }
+    }
+    return out;
+  };
+
+  Node.prototype.add = function(newnode) {
+    var c1, c2, x, y, _ref, _ref2, _ref3, _ref4;
+    c1 = this.where(newnode.x, newnode.y);
+    c2 = this.where(newnode.x + newnode.w, newnode.y + newnode.h);
+    for (x = _ref = c1[0], _ref2 = c2[0]; _ref <= _ref2 ? x <= _ref2 : x >= _ref2; _ref <= _ref2 ? x++ : x--) {
+      for (y = _ref3 = c1[1], _ref4 = c2[1]; _ref3 <= _ref4 ? y <= _ref4 : y >= _ref4; _ref3 <= _ref4 ? y++ : y--) {
+        this.children[x + ',' + y].push(newnode.uuid);
+      }
+    }
+  };
+
+  Node.prototype.clear = function() {
+    var x, y, _ref, _results;
+    this.children = {};
+    _results = [];
+    for (x = 0, _ref = this.pw - 1; 0 <= _ref ? x <= _ref : x >= _ref; 0 <= _ref ? x++ : x--) {
+      _results.push((function() {
+        var _ref2, _results2;
+        _results2 = [];
+        for (y = 0, _ref2 = this.ph - 1; 0 <= _ref2 ? y <= _ref2 : y >= _ref2; 0 <= _ref2 ? y++ : y--) {
+          _results2.push(this.children[x + ',' + y] = []);
+        }
+        return _results2;
+      }).call(this));
+    }
+    return _results;
+  };
+
+  return Node;
+
+})();
+
 GG = (function() {
 
   function GG(options) {
-    var _this = this;
+    var tag, _i, _len, _ref,
+      _this = this;
     this.options = options;
     this.loadsounds = __bind(this.loadsounds, this);
     this.playsound = __bind(this.playsound, this);
@@ -403,6 +469,8 @@ GG = (function() {
     this.tags = {};
     this.keys = {};
     this.snds = {};
+    this.entityCount = 0;
+    this.tag_counts = {};
     $(window).on({
       keydown: function(evt) {
         _this.keys[evt.which] = 'd';
@@ -419,6 +487,14 @@ GG = (function() {
       window.soundManager.flashVersion = 9;
       window.soundManager.useFlashBlock = false;
     }
+    if (this.options.spatial) {
+      this.spatial = {};
+      _ref = this.options.spatial;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tag = _ref[_i];
+        this.spatial[tag] = new Node();
+      }
+    }
     if (this.options) {
       if (this.options.sounds) this.loadsounds(this.options.sounds);
     }
@@ -428,12 +504,17 @@ GG = (function() {
     var tag, uuid, _i, _len, _ref;
     this.entities_uuid += 1;
     uuid = this.entities_uuid.toString(36);
+    this.entityCount += 1;
     if (item.tags) {
       _ref = item.tags;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         tag = _ref[_i];
-        if (!this.tags[tag]) this.tags[tag] = {};
+        if (!this.tags[tag]) {
+          this.tags[tag] = {};
+          this.tag_counts[tag] = 0;
+        }
         this.tags[tag][uuid] = 1;
+        this.tag_counts[tag] += 1;
       }
     }
     item.uuid = uuid;
@@ -441,47 +522,96 @@ GG = (function() {
     return this.entities_uuid;
   };
 
+  GG.prototype.has_tag = function(item, tag) {
+    return this.tags[tag] && this.tags[tag][item.uuid];
+  };
+
+  GG.prototype.update_spatials = function() {
+    var spatial_index, _ref, _results;
+    _ref = this.spatial;
+    _results = [];
+    for (spatial_index in _ref) {
+      if (!__hasProp.call(_ref, spatial_index)) continue;
+      this.spatial[spatial_index].clear();
+      _results.push(this.each([spatial_index], function(item) {
+        return this.spatial[spatial_index].add(item);
+      }));
+    }
+    return _results;
+  };
+
+  GG.prototype.find_spatial = function(spatial_index, range, cb) {
+    var near, p, _i, _len, _ref;
+    _ref = this.spatial[spatial_index].find(range);
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      near = _ref[_i];
+      p = this.entities[near];
+      if ((p.x - range.x < range.w) && (range.x - p.x < p.w) && (p.y - range.y < range.h) && (range.y - p.y < p.h)) {
+        cb.apply(this, [p]);
+      }
+    }
+  };
+
+  GG.prototype.collisions = function(spatial_index1, spatial_index2, cb) {
+    var e1, e2, node1, p1, p2, region1, region2, _i, _j, _len, _len2, _ref;
+    _ref = this.spatial[spatial_index1].children;
+    for (node1 in _ref) {
+      if (!__hasProp.call(_ref, node1)) continue;
+      region1 = this.spatial[spatial_index1].children[node1];
+      region2 = this.spatial[spatial_index2].children[node1];
+      for (_i = 0, _len = region1.length; _i < _len; _i++) {
+        e1 = region1[_i];
+        for (_j = 0, _len2 = region2.length; _j < _len2; _j++) {
+          e2 = region2[_j];
+          if (e1 !== e2) {
+            p1 = this.entities[e1];
+            p2 = this.entities[e2];
+            if ((p1.x - p2.x < p2.w) && (p2.x - p1.x < p1.w) && (p1.y - p2.y < p2.h) && (p2.y - p1.y < p1.h)) {
+              cb.apply(this, [p1, p2]);
+            }
+          }
+        }
+      }
+    }
+  };
+
   GG.prototype.get = function(uuid) {
     return this.entities[uuid];
   };
 
-  GG.prototype.each = function(tag, cb) {
-    var id, _results, _results2;
+  GG.prototype.each = function(tags, cb) {
+    var id, tag, _i, _len, _ref;
     if (cb) {
-      _results = [];
-      for (id in this.tags[tag]) {
-        _results.push(cb(this.entities[id]));
+      for (_i = 0, _len = tags.length; _i < _len; _i++) {
+        tag = tags[_i];
+        _ref = this.tags[tag];
+        for (id in _ref) {
+          if (!__hasProp.call(_ref, id)) continue;
+          cb.apply(this, [this.entities[id]]);
+        }
       }
-      return _results;
     } else {
-      cb = tag;
-      _results2 = [];
+      cb = tags;
       for (id in this.entities) {
-        _results2.push(cb(this.entities[id]));
+        cb.apply(this, [this.entities[id]]);
       }
-      return _results2;
     }
   };
 
   GG.prototype.count = function(tag) {
-    var id, s;
-    s = 0;
     if (tag) {
-      for (id in this.tags[tag]) {
-        s += 1;
-      }
+      return this.tag_counts[tag] || 0;
     } else {
-      for (id in this.entities) {
-        s += 1;
-      }
+      return this.entityCount || 0;
     }
-    return s;
   };
 
   GG.prototype.find = function(tag) {
-    var id, _results;
+    var id, _ref, _results;
+    _ref = this.tags[tag];
     _results = [];
-    for (id in this.tags[tag]) {
+    for (id in _ref) {
+      if (!__hasProp.call(_ref, id)) continue;
       _results.push(this.entities[id]);
     }
     return _results;
@@ -491,10 +621,12 @@ GG = (function() {
     var tag, uuid, _i, _len, _ref;
     uuid = bullet.uuid;
     if (this.entities[uuid]) {
+      this.entityCount -= 1;
       if (this.entities[uuid].tags) {
         _ref = this.entities[uuid].tags;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           tag = _ref[_i];
+          this.tag_counts[tag] -= 1;
           delete this.tags[tag][uuid];
         }
       }
@@ -517,7 +649,7 @@ GG = (function() {
   };
 
   GG.prototype.playsound = function(snd, opts) {
-    if (gg.snds[snd]) gg.snds[snd].play(opts);
+    if (this.snds[snd]) this.snds[snd].play(opts);
   };
 
   GG.prototype.loadsounds = function(loadthese) {
@@ -526,6 +658,7 @@ GG = (function() {
       window.soundManager.onready(function() {
         var soundId, url;
         for (soundId in loadthese) {
+          if (!__hasProp.call(loadthese, soundId)) continue;
           url = loadthese[soundId];
           _this.snds[soundId] = window.soundManager.createSound({
             id: soundId,
@@ -541,7 +674,11 @@ GG = (function() {
 
 })();
 
-gg = new GG();
+gg = new GG({
+  spatial: ['bullet', 'bullet2']
+});
+
+root = new Node();
 
 gg.loadsounds({
   test: 'assets/sounds/test.mp3'
@@ -550,36 +687,57 @@ gg.loadsounds({
 $container = $("#container")[0];
 
 gg.frame = function(diff, total) {
-  var x;
-  for (x = 0; x <= 1; x++) {
+  while (gg.count('bullet') < 100) {
     gg.add({
       vx: 0,
       vy: 0,
       x: 400,
       y: 300,
-      w: 10,
-      h: 10,
-      color: ['#f60', '#06f', '#6f0', '#0f6', '#06f', '#06f'][Math.floor(Math.random() * 6)],
+      w: 20,
+      h: 20,
+      color: '#000',
       tags: ['bullet']
     });
   }
-  gg.each('bullet', function(bullet) {
+  while (gg.count('bullet2') < 100) {
+    gg.add({
+      vx: 0,
+      vy: 0,
+      x: 400,
+      y: 300,
+      w: 5,
+      h: 5,
+      color: '#333',
+      tags: ['bullet2']
+    });
+  }
+  gg.each(['bullet2', 'bullet'], function(bullet) {
     bullet.vx *= 0.999;
     bullet.vy *= 0.999;
     bullet.vy += (Math.random() - 0.5) * 1;
     bullet.vx += (Math.random() - 0.5) * 1;
+    bullet.color = gg.has_tag(bullet, 'bullet') ? '#000' : '#00f';
+    bullet.x += bullet.vx;
+    bullet.y += bullet.vy;
     if (0 > bullet.y || bullet.y > 600 || 0 > bullet.x || bullet.x > 800) {
-      bullet.ele.parentNode.removeChild(bullet.ele);
-      gg.remove(bullet);
-      return gg.playsound('test', {
-        volume: 10,
-        pan: bullet.x * 100 / 800
-      });
+      if (bullet.ele) bullet.ele.parentNode.removeChild(bullet.ele);
+      return gg.remove(bullet);
     }
   });
+  gg.update_spatials();
+  gg.find_spatial('bullet', {
+    x: 0,
+    y: 0,
+    w: 400,
+    h: 300
+  }, function(bullet) {
+    return bullet.color = '#f00';
+  });
+  gg.collisions('bullet', 'bullet2', function(bullet, bullet2) {
+    bullet.color = '#0f0';
+    return bullet2.color = '#0f0';
+  });
   gg.each(function(item) {
-    item.x += item.vx;
-    item.y += item.vy;
     if (!item.ele) {
       item.ele = document.createElement('div');
       item.ele.className = "block";
@@ -587,7 +745,7 @@ gg.frame = function(diff, total) {
     }
     return item.ele.style.cssText = ['top:', item.y, 'px;', 'left:', item.x, 'px;', 'height:', item.h, 'px;', 'width:', item.w, 'px;', 'background-color:', item.color, ';'].join('');
   });
-  if (Math.random() < 0.01) return $("#count").html(gg.count('bullet'));
+  return $("#count").html([gg.count(), gg.count('bullet'), gg.count('bullet2')].join('-'));
 };
 
 gg.start();
