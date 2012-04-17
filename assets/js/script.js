@@ -691,8 +691,8 @@ gg.frame = function(diff, total) {
     gg.add({
       vx: 0,
       vy: 0,
-      x: 400,
-      y: 300,
+      x: Math.random() * 800,
+      y: Math.random() * 600,
       w: 20,
       h: 20,
       color: '#000',
@@ -703,8 +703,8 @@ gg.frame = function(diff, total) {
     gg.add({
       vx: 0,
       vy: 0,
-      x: 400,
-      y: 300,
+      x: Math.random() * 800,
+      y: Math.random() * 600,
       w: 5,
       h: 5,
       color: '#333',
