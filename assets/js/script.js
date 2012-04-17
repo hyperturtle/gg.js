@@ -699,7 +699,7 @@ gg.frame = function(diff, total) {
       tags: ['bullet']
     });
   }
-  while (gg.count('bullet2') < 100) {
+  while (gg.count('bullet2') < 5) {
     gg.add({
       vx: 0,
       vy: 0,
