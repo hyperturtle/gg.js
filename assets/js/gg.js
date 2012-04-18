@@ -635,7 +635,7 @@ GG = (function() {
 
   GG.prototype.start = function() {
     this.prevFrame = new Date().getTime();
-    return this._frame();
+    return requestAnimationFrame(this._frame);
   };
 
   GG.prototype.frame = function(diff, total) {};
@@ -644,6 +644,7 @@ GG = (function() {
     var diff;
     diff = total - this.prevFrame;
     this.frame(diff, total);
+    this.prevFrame = total;
     return requestAnimationFrame(this._frame);
   };
 

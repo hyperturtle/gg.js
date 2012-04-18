@@ -164,11 +164,12 @@ class GG
       delete @entities[uuid]
   start: () ->
     @prevFrame = new Date().getTime()
-    @_frame()
+    requestAnimationFrame @_frame
   frame: (diff, total) ->
   _frame: (total) =>
     diff = total - @prevFrame
     @frame(diff, total)
+    @prevFrame = total
     requestAnimationFrame @_frame
   playsound: (snd, opts) =>
     if @snds[snd]

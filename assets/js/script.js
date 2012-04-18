@@ -636,7 +636,7 @@ GG = (function() {
 
   GG.prototype.start = function() {
     this.prevFrame = new Date().getTime();
-    return this._frame();
+    return requestAnimationFrame(this._frame);
   };
 
   GG.prototype.frame = function(diff, total) {};
@@ -645,6 +645,7 @@ GG = (function() {
     var diff;
     diff = total - this.prevFrame;
     this.frame(diff, total);
+    this.prevFrame = total;
     return requestAnimationFrame(this._frame);
   };
 
@@ -687,61 +688,60 @@ gg.loadsounds({
 $container = $("#container")[0];
 
 spawn = function(x, y, s) {
+  var ele;
   if (x == null) x = Math.random() * 800;
   if (y == null) y = Math.random() * 600;
-  if (s == null) s = 5;
-  return gg.add({
+  if (s == null) s = 42;
+  ele = document.createElement('div');
+  gg.add({
     vx: 0,
     vy: 0,
     x: x,
     y: y,
     w: s,
     h: s,
+    spriteX: 0,
+    spriteY: 0,
+    klass: 'block',
     color: '#000',
-    tags: ['bullet']
+    tags: ['bullet'],
+    ele: ele
   });
+  return $container.appendChild(ele);
 };
 
 gg.frame = function(diff, total) {
-  while (gg.count('bullet') < 30) {
+  while (gg.count('bullet') < 100) {
     spawn();
   }
   gg.each(['bullet'], function(bullet) {
     bullet.vx *= 0.999;
     bullet.vy *= 0.999;
-    bullet.vy += (Math.random() - 0.5) * 1;
-    bullet.vx += (Math.random() - 0.5) * 1;
-    bullet.w = Math.min(20, bullet.w * 1.01);
-    bullet.h = Math.min(20, bullet.h * 1.01);
+    bullet.vy += (Math.random() - 0.5) * 0.5;
+    bullet.vx += (Math.random() - 0.5) * 0.5;
     bullet.color = gg.has_tag(bullet, 'bullet') ? '#000' : '#00f';
     bullet.x += bullet.vx;
     bullet.y += bullet.vy;
-    if (0 > bullet.y || bullet.y > 600 || 0 > bullet.x || bullet.x > 800) {
+    if (0 > (bullet.y + bullet.h) || bullet.y > 600 || 0 > (bullet.x + bullet.w) || bullet.x > 800) {
       return bullet.kill = 1;
     }
   });
   gg.update_spatials();
   gg.collisions('bullet', 'bullet', function(bullet1, bullet2) {
-    if (bullet1.w + bullet2.w >= 20 && gg.count('bullet') < 100) {
-      spawn(bullet1.x + 20 * (Math.random() - 0.5), bullet1.y + 20 * (Math.random() - 0.5));
-      spawn(bullet1.x + 20 * (Math.random() - 0.5), bullet1.y + 20 * (Math.random() - 0.5));
-    }
-    bullet1.color = '#0f0';
-    bullet2.color = '#0f0';
-    bullet1.kill = 1;
-    return bullet2.kill = 1;
+    bullet1.vy += (Math.random() - 0.5) * 0.5;
+    bullet2.vy += (Math.random() - 0.5) * 0.5;
+    bullet1.vx += (Math.random() - 0.5) * 0.5;
+    bullet2.vx += (Math.random() - 0.5) * 0.5;
+    bullet2.spriteX = (bullet2.spriteX + 1) % 25;
+    return bullet1.spriteY = (bullet1.spriteX + 1) % 26;
   });
   return gg.each(function(item) {
     if (item.kill) {
       if (item.ele) item.ele.parentNode.removeChild(item.ele);
       return gg.remove(item);
     } else {
-      if (!item.ele) {
-        item.ele = document.createElement('div');
-        item.ele.className = "block";
-        $container.appendChild(item.ele);
-      }
-      return item.ele.style.cssText = ['top:', item.y, 'px;', 'left:', item.x, 'px;', 'height:', item.h, 'px;', 'width:', item.w, 'px;', 'background-color:', item.color, ';'].join('');
+      item.ele.className = item.klass;
+      return item.ele.style.cssText = ['top:', item.y - 10, 'px;', 'left:', item.x - 10, 'px;', 'height:', item.h + 20, 'px;', 'width:', item.w + 20, 'px;', 'background-position:', item.spriteX * 64, 'px ', item.spriteY * 64, 'px;'].join('');
     }
   });
 };
